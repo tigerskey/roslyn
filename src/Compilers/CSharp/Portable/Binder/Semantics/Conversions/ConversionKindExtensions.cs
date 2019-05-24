@@ -21,7 +21,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             switch (conversionKind)
             {
                 case ConversionKind.NoConversion:
-                case ConversionKind.UnsetConversionKind:
                     return false;
 
                 case ConversionKind.Identity:
