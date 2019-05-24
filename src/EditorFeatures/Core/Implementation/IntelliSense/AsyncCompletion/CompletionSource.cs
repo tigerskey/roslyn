@@ -36,7 +36,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
         internal const string InsertionText = nameof(InsertionText);
         internal const string HasSuggestionItemOptions = nameof(HasSuggestionItemOptions);
         internal const string Description = nameof(Description);
-        internal const string InitialTriggerKind = nameof(InitialTriggerKind);
         internal const string PotentialCommitCharacters = nameof(PotentialCommitCharacters);
         internal const string ExcludedCommitCharacters = nameof(ExcludedCommitCharacters);
         internal const string NonBlockingCompletion = nameof(NonBlockingCompletion);
@@ -96,10 +95,11 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
                 return AsyncCompletionData.CompletionStartData.DoesNotParticipateInCompletion;
             }
 
-            if (!document.Project.Solution.Workspace.Options.GetOption(CompletionOptions.BlockForCompletionItems, service.Language))
-            {
-                _textView.Options.GlobalOptions.SetOptionValue(NonBlockingCompletionEditorOption, true);
-            }
+            // The Editor supports the option per textView.
+            // There could be mixed desired behavior per textView and even per same completion session.
+            // The right fix would be to send this information as a result of the method. 
+            // Then, the Editor would choose the right behavior for mixed cases.
+            _textView.Options.GlobalOptions.SetOptionValue(NonBlockingCompletionEditorOption, !document.Project.Solution.Workspace.Options.GetOption(CompletionOptions.BlockForCompletionItems, service.Language));
 
             // In case of calls with multiple completion services for the same view (e.g. TypeScript and C#), those completion services must not be called simultaneously for the same session.
             // Therefore, in each completion session we use a list of commit character for a specific completion service and a specific content type.
@@ -263,7 +263,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncComplet
             // If there are suggestionItemOptions, then later HandleNormalFiltering should set selection to SoftSelection.
             session.Properties.AddProperty(HasSuggestionItemOptions, suggestionItemOptions != null);
 
-            session.Properties.AddProperty(InitialTriggerKind, roslynTrigger.Kind);
             var excludedCommitCharacters = GetExcludedCommitCharacters(completionList.Items);
             if (excludedCommitCharacters.Length > 0)
             {
