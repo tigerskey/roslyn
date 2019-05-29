@@ -41,35 +41,39 @@ namespace Microsoft.CodeAnalysis.Emit
         public virtual MetadataReaderProvider OpenAssemblyMetadata(bool prefetch)
         {
             var peStream = OpenAssemblyStreamChecked();
-            if (peStream != null)
+            if (peStream == null)
             {
-                PEHeaders peHeaders;
-                using (var peReader = new PEReader(peStream, PEStreamOptions.LeaveOpen))
-                {
-                    peHeaders = peReader.PEHeaders;
-                }
-
-                peStream.Position = peHeaders.MetadataStartOffset;
-                return MetadataReaderProvider.FromMetadataStream(
-                    peStream,
-                    prefetch ? MetadataStreamOptions.PrefetchMetadata : MetadataStreamOptions.Default,
-                    size: peHeaders.MetadataSize);
+                return null;
             }
 
-            return null;
+            PEHeaders peHeaders;
+            using (var peReader = new PEReader(peStream, PEStreamOptions.LeaveOpen))
+            {
+                peHeaders = peReader.PEHeaders;
+            }
+
+            peStream.Position = peHeaders.MetadataStartOffset;
+            return MetadataReaderProvider.FromMetadataStream(
+                peStream,
+                prefetch ? MetadataStreamOptions.PrefetchMetadata : MetadataStreamOptions.Default,
+                size: peHeaders.MetadataSize);
         }
 
         /// <summary>
         /// Reads MVID of the output assembly. Overridable for test mocking.
+        /// Returns <see cref="Guid.Empty"/> if the assembly is not available.
         /// </summary>
         internal virtual Guid ReadAssemblyModuleVersionId()
         {
-            using (var metadataProvider = OpenAssemblyMetadata(prefetch: false))
+            using var metadataProvider = OpenAssemblyMetadata(prefetch: false);
+            if (metadataProvider == null)
             {
-                var metadataReader = metadataProvider.GetMetadataReader();
-                var mvidHandle = metadataReader.GetModuleDefinition().Mvid;
-                return metadataReader.GetGuid(mvidHandle);
+                return Guid.Empty;
             }
+
+            var metadataReader = metadataProvider.GetMetadataReader();
+            var mvidHandle = metadataReader.GetModuleDefinition().Mvid;
+            return metadataReader.GetGuid(mvidHandle);
         }
 
         /// <summary>

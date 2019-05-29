@@ -184,7 +184,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue
                 // Do not report the file read error - it might be an intermittent issue. The error will be reported when the 
                 // change is attempted to be applied.
                 var (mvid, _) = await debuggingSession.GetProjectModuleIdAsync(project.Id, cancellationToken).ConfigureAwait(false);
-                if (mvid == default)
+                if (mvid == Guid.Empty)
                 {
                     return ImmutableArray<Diagnostic>.Empty;
                 }
