@@ -520,7 +520,7 @@ class C1
         }
 
         [Fact]
-        public async Task BreakMode_CompilationError()
+        public async Task BreakMode_SyntaxError()
         {
             var moduleId = Guid.NewGuid();
 
@@ -565,6 +565,72 @@ class C1
                 {
                     "Debugging_EncSession: SessionId=1|SessionCount=1|EmptySessionCount=0",
                     "Debugging_EncSession_EditSession: SessionId=1|EditSessionId=2|HadCompilationErrors=True|HadRudeEdits=False|HadValidChanges=False|HadValidInsignificantChanges=False|RudeEditsCount=0|EmitDeltaErrorIdCount=0"
+                }, _telemetryLog);
+            }
+        }
+
+        [Fact]
+        public async Task BreakMode_SemanticError()
+        {
+            var sourceV1 = "class C1 { void M() { System.Console.WriteLine(1); } }";
+            var compilationV1 = CSharpTestBase.CreateCompilationWithMscorlib40(sourceV1, options: TestOptions.DebugDll);
+            var (peImage, symReader) = SymReaderTestHelpers.EmitAndOpenDummySymReader(compilationV1, DebugInformationFormat.PortablePdb);
+
+            var moduleMetadata = ModuleMetadata.CreateFromImage(peImage);
+            var moduleId = moduleMetadata.GetModuleVersionId();
+            var debuggeeModuleInfo = new DebuggeeModuleInfo(moduleMetadata, symReader);
+
+            using (var workspace = TestWorkspace.CreateCSharp(sourceV1))
+            {
+                var project = workspace.CurrentSolution.Projects.Single();
+                _mockCompilationOutputsService.Outputs.Add(project.Id, new MockCompilationOutputs(moduleId));
+                _mockDebugeeModuleMetadataProvider.TryGetBaselineModuleInfo = mvid => debuggeeModuleInfo;
+
+                var service = CreateEditAndContinueService(workspace);
+
+                service.StartDebuggingSession();
+
+                service.StartEditSession();
+                VerifyReanalyzeInvocation(workspace, null, ImmutableArray<DocumentId>.Empty, false);
+
+                // change the source (compilation error):
+                var document1 = workspace.CurrentSolution.Projects.Single().Documents.Single();
+                workspace.ChangeDocument(document1.Id, SourceText.From("class C1 { void M() { int i = 0L; System.Console.WriteLine(i); } }", Encoding.UTF8));
+                var document2 = workspace.CurrentSolution.Projects.Single().Documents.Single();
+
+                // compilation errors are not reported via EnC diagnostic analyzer:
+                var diagnostics1 = await service.GetDocumentDiagnosticsAsync(document2, CancellationToken.None).ConfigureAwait(false);
+                AssertEx.Empty(diagnostics1);
+
+                // The EnC analyzer does not check for and block on all semantic errors as they are already reported by diagnostic analyzer.
+                // Blocking update on semantic errors would be possible, but the status check is only an optimization to avoid emitting.
+                var solutionStatus = await service.GetSolutionUpdateStatusAsync(sourceFilePath: null, CancellationToken.None).ConfigureAwait(false);
+                Assert.Equal(SolutionUpdateStatus.Ready, solutionStatus);
+
+                var (solutionStatusEmit, deltas) = await service.EmitSolutionUpdateAsync(CancellationToken.None).ConfigureAwait(false);
+                Assert.Equal(SolutionUpdateStatus.Blocked, solutionStatusEmit);
+                Assert.Empty(deltas);
+
+                // TODO: https://github.com/dotnet/roslyn/issues/36061 
+                // Semantic errors should not be reported in emit diagnostics.
+                AssertEx.Equal(new[] { "CS0266" }, _emitDiagnosticsUpdated.Single().Diagnostics.Select(d => d.Id));
+                Assert.Equal(SolutionUpdateStatus.Blocked, solutionStatusEmit);
+                _emitDiagnosticsUpdated.Clear();
+                _emitDiagnosticsClearedCount = 0;
+
+                service.EndEditSession();
+                VerifyReanalyzeInvocation(workspace, null, ImmutableArray<DocumentId>.Empty, false);
+
+                service.EndDebuggingSession();
+                VerifyReanalyzeInvocation(workspace, null, ImmutableArray<DocumentId>.Empty, false);
+
+                AssertEx.Equal(new[] { moduleId }, _modulesPreparedForUpdate);
+
+                AssertEx.Equal(new[]
+                {
+                    "Debugging_EncSession: SessionId=1|SessionCount=1|EmptySessionCount=0",
+                    "Debugging_EncSession_EditSession: SessionId=1|EditSessionId=2|HadCompilationErrors=False|HadRudeEdits=False|HadValidChanges=True|HadValidInsignificantChanges=False|RudeEditsCount=0|EmitDeltaErrorIdCount=1",
+                    "Debugging_EncSession_EditSession_EmitDeltaErrorId: SessionId=1|EditSessionId=2|ErrorId=CS0266"
                 }, _telemetryLog);
             }
         }

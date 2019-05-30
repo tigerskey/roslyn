@@ -1638,8 +1638,8 @@ This version used in: {2}</value>
   <data name="EditAndContinueDisallowedByModule" xml:space="preserve">
     <value>Edit and Continue disallowed by module</value>
   </data>
-  <data name="CantApplyChangesUnexpectedError" xml:space="preserve">
-    <value>Can't apply changes -- unexpected error: '{0}'</value>
+  <data name="CannotApplyChangesUnexpectedError" xml:space="preserve">
+    <value>Cannot apply changes -- unexpected error: '{0}'</value>
   </data>
   <data name="ErrorReadingFile" xml:space="preserve">
     <value>Error while reading file '{0}': {1}</value>

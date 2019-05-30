@@ -339,6 +339,19 @@ namespace Microsoft.CodeAnalysis.EditAndContinue
             _diagnosticService.Reanalyze(_workspace, documentIds: documentsToReanalyze);
         }
 
+        /// <summary>
+        /// Determine whether the updates made to projects containing the specified file (or all projects that are built, 
+        /// if <paramref name="sourceFilePath"/> is null) are ready to be applied and the debugger should attempt to apply
+        /// them on "continue".
+        /// </summary>
+        /// <returns>
+        /// Returns <see cref="SolutionUpdateStatus.Blocked"/> if there are rude edits or other errors 
+        /// that block the application of the updates. Might return <see cref="SolutionUpdateStatus.Ready"/> even if there are 
+        /// errors in the code that will block the application of the updates. E.g. emit diagnostics can't be determined until 
+        /// emit is actually performed. Therefore, this method only serves as an optimization to avoid unnecessary emit attempts,
+        /// but does not provide a definitive answer. Only <see cref="EmitSolutionUpdateAsync"/> can definitively determine whether
+        /// the update is valid or not.
+        /// </returns>
         public Task<SolutionUpdateStatus> GetSolutionUpdateStatusAsync(string sourceFilePath, CancellationToken cancellationToken)
         {
             // GetStatusAsync is called outside of edit session when the debugger is determining 

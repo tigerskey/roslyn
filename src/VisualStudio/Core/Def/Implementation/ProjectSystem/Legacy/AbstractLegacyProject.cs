@@ -105,7 +105,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem.L
             ConnectHierarchyEvents();
             RefreshBinOutputPath();
 
-            // TODO: The ctor of ExternalErrorDiagnosticUpdateSource throws when running in tests since UIContextImpl calls:
+            // TODO: https://github.com/dotnet/roslyn/issues/36065
+            // The ctor of ExternalErrorDiagnosticUpdateSource throws when running in tests since UIContextImpl calls:
             //   (IVsMonitorSelection)ServiceProvider.GlobalProvider.GetService(typeof(IVsMonitorSelection))),
             // which returns null.
             try

@@ -733,11 +733,11 @@ namespace Microsoft.CodeAnalysis {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Can&apos;t apply changes -- unexpected error: &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Cannot apply changes -- unexpected error: &apos;{0}&apos;.
         /// </summary>
-        internal static string CantApplyChangesUnexpectedError {
+        internal static string CannotApplyChangesUnexpectedError {
             get {
-                return ResourceManager.GetString("CantApplyChangesUnexpectedError", resourceCulture);
+                return ResourceManager.GetString("CannotApplyChangesUnexpectedError", resourceCulture);
             }
         }
         

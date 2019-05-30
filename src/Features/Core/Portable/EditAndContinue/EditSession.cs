@@ -755,6 +755,13 @@ namespace Microsoft.CodeAnalysis.EditAndContinue
                                 isBlocked = true;
                             }
 
+                            // TODO: https://github.com/dotnet/roslyn/issues/36061
+                            // We should only report diagnostics from emit phase.
+                            // Syntax and semantic diagnostics are already reported by the diagnostic analyzer.
+                            // Currently we do not have means to distinguish between diagnostics reported from compilation and emit phases.
+                            // Querying diagnostics of the entire compilation or just the updated files migth be slow.
+                            // In fact, it is desirable to allow emitting deltas for symbols affected by the change while allowing untouched
+                            // method bodies to have errors.
                             diagnostics.Add((project.Id, emitResult.Diagnostics));
                             Telemetry.LogProjectAnalysisSummary(projectSummary, emitResult.Diagnostics);
                         }

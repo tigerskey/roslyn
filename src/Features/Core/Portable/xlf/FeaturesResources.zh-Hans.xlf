@@ -67,9 +67,9 @@
         <target state="new">Avoid unused paramereters in your code. If the parameter cannot be removed, then change its name so it starts with an underscore and is optionally followed by an integer, such as '_', '_1', '_2', etc. These are treated as special discard symbol names.</target>
         <note />
       </trans-unit>
-      <trans-unit id="CantApplyChangesUnexpectedError">
-        <source>Can't apply changes -- unexpected error: '{0}'</source>
-        <target state="new">Can't apply changes -- unexpected error: '{0}'</target>
+      <trans-unit id="CannotApplyChangesUnexpectedError">
+        <source>Cannot apply changes -- unexpected error: '{0}'</source>
+        <target state="new">Cannot apply changes -- unexpected error: '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="Change_namespace_to_0">

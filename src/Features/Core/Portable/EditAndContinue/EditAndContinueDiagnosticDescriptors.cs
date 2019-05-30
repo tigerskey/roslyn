@@ -148,7 +148,7 @@ namespace Microsoft.CodeAnalysis.EditAndContinue
             s_diagnosticBaseIndex = builder.Count;
 
             AddGeneralDiagnostic(EditAndContinueErrorCode.ErrorReadingFile, nameof(FeaturesResources.ErrorReadingFile));
-            AddGeneralDiagnostic(EditAndContinueErrorCode.CannotApplyChangesUnexpectedError, nameof(FeaturesResources.CantApplyChangesUnexpectedError));
+            AddGeneralDiagnostic(EditAndContinueErrorCode.CannotApplyChangesUnexpectedError, nameof(FeaturesResources.CannotApplyChangesUnexpectedError));
             AddGeneralDiagnostic(EditAndContinueErrorCode.ChangesDisallowedWhileStoppedAtException, nameof(FeaturesResources.ChangesDisallowedWhileStoppedAtException));
             AddGeneralDiagnostic(EditAndContinueErrorCode.ChangesNotAppliedWhileRunning, nameof(FeaturesResources.ChangesNotAppliedWhileRunning), DiagnosticSeverity.Warning);
 
