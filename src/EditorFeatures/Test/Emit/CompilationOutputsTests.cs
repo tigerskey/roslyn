@@ -109,7 +109,7 @@ namespace Microsoft.CodeAnalysis.Emit.UnitTests
                 Assert.Equal("lib", mdReader.GetString(mdReader.GetAssemblyDefinition().Name));
             }
 
-            Assert.Equal("e4c61ae1-9363-467f-b3c0-69d63c3ac5c4", outputs.ReadAssemblyModuleVersionId().ToString());
+            Assert.NotEqual(Guid.Empty, outputs.ReadAssemblyModuleVersionId());
         }
 
         [Fact]
