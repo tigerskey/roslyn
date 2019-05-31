@@ -121,7 +121,7 @@ End Module");
             VisualStudio.Debugger.CheckExpression("myNonsense", "", "error BC30451: 'myNonsense' is not declared. It may be inaccessible due to its protection level.");
         }
 
-        [WpfFact]
+        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/35965")]
         public void StateMachineTypeParameters()
         {
             VisualStudio.Editor.SetText(@"
