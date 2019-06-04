@@ -5,8 +5,8 @@
     Roslyn version
   -->
   <PropertyGroup>
-    <MajorVersion>3</MajorVersion>
-    <MinorVersion>2</MinorVersion>
+    <MajorVersion>9</MajorVersion>
+    <MinorVersion>9</MinorVersion>
     <PatchVersion>0</PatchVersion>
     <PreReleaseVersionLabel>beta3</PreReleaseVersionLabel>
     
