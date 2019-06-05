@@ -99,60 +99,43 @@ namespace Microsoft.CodeAnalysis.Recommendations
             {
                 if (candidateSymbol is IMethodSymbol method)
                 {
-                    ITypeSymbol type;
-                    if (method.IsParams() && (ordinalInInvocation >= method.Parameters.Length - 1))
+                    if (method.Parameters.Length > ordinalInInvocation)
                     {
-                        if (method.Parameters.LastOrDefault()?.Type is IArrayTypeSymbol arrayType)
+                        var type = method.Parameters[ordinalInInvocation].Type;
+                        // If type is <see cref="Expression{TDelegate}"/>, ignore <see cref="Expression"/> and use TDelegate.
+                        // Ignore this check if expressionSymbol is null, e.g. semantic model is broken or incomplete or if the framework does not contain <see cref="Expression"/>.
+                        if (expressionSymbol != null &&
+                            type is INamedTypeSymbol expressionSymbolNamedTypeCandidate &&
+                            expressionSymbolNamedTypeCandidate.OriginalDefinition.Equals(expressionSymbol))
                         {
-                            type = arrayType.ElementType;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-                    else if (ordinalInInvocation < method.Parameters.Length)
-                    {
-                        type = method.Parameters[ordinalInInvocation].Type;
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                            var allTypeArguments = type.GetAllTypeArguments();
+                            if (allTypeArguments.Length != 1)
+                            {
+                                continue;
+                            }
 
-                    // If type is <see cref="Expression{TDelegate}"/>, ignore <see cref="Expression"/> and use TDelegate.
-                    // Ignore this check if expressionSymbol is null, e.g. semantic model is broken or incomplete or if the framework does not contain <see cref="Expression"/>.
-                    if (expressionSymbol != null &&
-                        type is INamedTypeSymbol expressionSymbolNamedTypeCandidate &&
-                        expressionSymbolNamedTypeCandidate.OriginalDefinition.Equals(expressionSymbol))
-                    {
-                        var allTypeArguments = type.GetAllTypeArguments();
-                        if (allTypeArguments.Length != 1)
-                        {
-                            continue;
+                            type = allTypeArguments[0];
                         }
 
-                        type = allTypeArguments[0];
-                    }
-
-                    if (type.IsDelegateType())
-                    {
-                        var methods = type.GetMembers(WellKnownMemberNames.DelegateInvokeName);
-                        if (methods.Length != 1)
+                        if (type.IsDelegateType())
                         {
-                            continue;
+                            var methods = type.GetMembers(WellKnownMemberNames.DelegateInvokeName);
+                            if (methods.Length != 1)
+                            {
+                                continue;
+                            }
+
+                            var parameters = methods[0].GetParameters();
+                            if (parameters.Length <= ordinalInLambda)
+                            {
+                                continue;
+                            }
+
+                            type = parameters[ordinalInLambda].Type;
                         }
 
-                        var parameters = methods[0].GetParameters();
-                        if (parameters.Length <= ordinalInLambda)
-                        {
-                            continue;
-                        }
-
-                        type = parameters[ordinalInLambda].Type;
+                        builder.Add(type);
                     }
-
-                    builder.Add(type);
                 }
             }
 
